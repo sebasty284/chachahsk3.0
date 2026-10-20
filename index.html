@@ -1017,6 +1017,43 @@ body[data-view="home"] .more{margin-top:30px}
 .hfoot .pact em{top:3px;right:4px;font-size:10px}
 .hfoot .actnote{margin-top:7px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:760px){.hfoot .petcard.pc2{padding:14px 16px}.hfoot .actnote{white-space:normal}}
+
+/* ---- Lộ trình: duyệt chặng ---- */
+.rd-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:-4px}
+.rd-nav b{color:var(--ink)}
+.rd-here{border:0;border-radius:999px;background:var(--jade-soft);color:var(--jade);font:inherit;font-size:12px;font-weight:800;padding:4px 11px;cursor:pointer}
+.rd-here:hover{filter:brightness(.96)}
+.rd-arr{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;margin:0 2px;box-shadow:0 2px 0 var(--line);transition:transform .12s,border-color .15s}
+.rd-arr svg{width:18px;height:18px}
+.rd-arr:hover:not(:disabled){border-color:var(--jade);color:var(--jade);transform:translateY(-1px)}
+.rd-arr:active:not(:disabled){transform:translateY(1px);box-shadow:none}
+.rd-arr:disabled{opacity:.35;cursor:default;box-shadow:none}
+.rd-arr:focus-visible,.rd-here:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.rd-more{flex:none;font-weight:800;font-size:18px;letter-spacing:2px;color:var(--muted);margin:0 2px;line-height:1;padding-bottom:3px}
+@media (prefers-reduced-motion:reduce){.rd-arr{transition:none}}
+
+/* ---- Lộ trình: bố cục gọn, hết khoảng trống ---- */
+.road{justify-content:space-between}
+.rd-mid{display:flex;flex-direction:column;gap:14px}
+.rd-path{flex:none;padding:6px 4px 26px}
+.rd-nav{margin-bottom:0}
+.rd-stage{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:9px}
+.rs-h{display:flex;align-items:center;gap:12px}
+.rs-h>div:first-child{display:flex;align-items:baseline;gap:8px;flex:none}
+.rs-h b{font-family:var(--display);font-size:16px}
+.rs-h span{font-size:12.5px;color:var(--muted)}
+.rs-bar{flex:1;height:8px;border-radius:5px;background:var(--heat0);overflow:hidden}
+.rs-bar i{display:block;height:100%;min-width:4px;background:var(--cta);border-radius:5px}
+.rs-l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rs-words{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rs-w{display:flex;align-items:center;gap:9px;min-width:0;padding:7px 10px;border-radius:13px;background:var(--surface2)}
+.rs-w .zh{font-family:var(--glyph);font-size:20px;line-height:1;flex:none;color:var(--ink)}
+.rs-w em{font-style:normal;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rd-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.rd-stats>div{text-align:center;padding:9px 6px;border-radius:14px;background:var(--surface2)}
+.rd-stats b{display:block;font-family:var(--display);font-size:22px;line-height:1.1;color:var(--jade)}
+.rd-stats span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+@media (max-width:760px){.rs-words{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -3018,23 +3055,31 @@ function homeRing() {
     ${R.left ? `<text x="60" y="47" text-anchor="middle" style="font:700 11px var(--font);fill:var(--muted)">còn</text><text x="60" y="73" text-anchor="middle" style="font:600 27px var(--display);fill:var(--ink)">${R.remPct}%</text>` : `<text x="60" y="68" text-anchor="middle" style="font:600 22px var(--display);fill:var(--ink)">Xong!</text>`}
     <text x="60" y="91" text-anchor="middle" style="font:700 11px var(--font);fill:var(--muted)">${R.goal === 7 ? "HSK 7–9" : "đến HSK " + R.goal}</text></svg>`;
 }
+const ROADV = { key:"", from:null };
+const roadWin = () => (window.innerWidth <= 760 ? 3 : 5);
 function roadCard() {
   const R = roadInfo(), c = R.cur, ns = Math.ceil(c.t / ROAD_STAGE);
   let cs = 0; while (cs < ns - 1 && c.ws.slice(cs * ROAD_STAGE, (cs + 1) * ROAD_STAGE).every(w => S.cards[w.id])) cs++;
-  const from = Math.max(0, Math.min(cs - 2, ns - 5)), to = Math.min(ns - 1, from + 4), nodes = [];
+  const W = roadWin(), maxFrom = Math.max(0, ns - W), auto = Math.max(0, Math.min(cs - (W >> 1), maxFrom)), vk = c.lv + ":" + cs;
+  if (ROADV.key !== vk) { ROADV.key = vk; ROADV.from = null; }
+  const from = ROADV.from == null ? auto : Math.max(0, Math.min(ROADV.from, maxFrom)), to = Math.min(ns - 1, from + W - 1), nodes = [], browsing = from !== auto, paged = ns > W;
   for (let i = from; i <= to; i++) {
     const seg = c.ws.slice(i * ROAD_STAGE, (i + 1) * ROAD_STAGE), dn = seg.filter(w => S.cards[w.id]).length, state = dn === seg.length ? "d" : i === cs ? "c" : "l";
-    nodes.push(`${i > from ? `<i class="rlink ${state === "d" ? "d" : ""} ${Math.abs(i - cs) > 1 || Math.abs(i - 1 - cs) > 1 ? "far" : ""}"></i>` : ""}<div class="rnode ${state} ${Math.abs(i - cs) > 1 ? "far" : ""}" title="Chặng ${i + 1}: ${dn}/${seg.length} từ"><span class="zh" lang="zh-CN">${esc(seg[0].hz.charAt(0))}</span><small>Chặng ${i + 1}</small></div>`);
+    nodes.push(`${i > from ? `<i class="rlink ${state === "d" ? "d" : ""} "></i>` : ""}<div class="rnode ${state}" title="Chặng ${i + 1}: ${dn}/${seg.length} từ"><span class="zh" lang="zh-CN">${esc(seg[0].hz.charAt(0))}</span><small>Chặng ${i + 1}</small></div>`);
   }
-  const allDone = !R.left, gift = `<div class="rnode g ${c.done === c.t ? "d" : "l"}" title="Hoàn thành ${lvName(c.lv)}"><span>🎁</span><small>Xong ${lvName(c.lv)}</small></div>`;
+  const stSeg = c.ws.slice(cs * ROAD_STAGE, (cs + 1) * ROAD_STAGE), stDn = stSeg.filter(w => S.cards[w.id]).length, nextW = stSeg.filter(w => !S.cards[w.id]).slice(0, 6);
+  const stagePanel = R.left ? `<div class="rd-stage"><div class="rs-h"><div><b>Chặng ${cs + 1}</b><span>${stDn}/${stSeg.length} từ</span></div><div class="rs-bar" aria-hidden="true"><i style="width:${(stDn / Math.max(1, stSeg.length) * 100).toFixed(1)}%"></i></div></div>
+      ${nextW.length ? `<div class="rs-l">Sắp học tiếp</div><div class="rs-words">${nextW.map(w => `<div class="rs-w"><span class="zh" lang="zh-CN">${esc(w.hz)}</span><em>${esc(w.vi)}</em></div>`).join("")}</div>` : ""}</div>` : "";
+  const atEnd = to >= ns - 1, allDone = !R.left, gift = `<div class="rnode g ${c.done === c.t ? "d" : "l"}" title="Hoàn thành ${lvName(c.lv)}"><span>🎁</span><small>Xong ${lvName(c.lv)}</small></div>`;
   const npd = Number(S.settings.newPerDay) || 0, days = R.left && npd ? Math.ceil(R.left / npd) : 0;
   return `<section class="road" aria-label="Lộ trình học">
     <div class="rd-h"><div class="rd-t"><h3>Lộ trình ${roadName(R)}</h3><span>${allDone ? "Bạn đã học hết các từ trong lộ trình 🎉 Chọn mục tiêu cao hơn để học tiếp." : `${lvName(c.lv)} · Chặng ${cs + 1}/${ns} · ${c.done.toLocaleString("vi-VN")}/${c.t.toLocaleString("vi-VN")} từ`}</span></div>
       <div class="rd-goal" role="group" aria-label="Chọn cấp mục tiêu"><span>Mục tiêu</span>${[1, 2, 3, 4, 5, 6, 7].map(l => `<button data-goal="${l}" aria-pressed="${l === R.goal}" title="Lộ trình đến ${lvName(l)}">${l === 7 ? "7–9" : l}</button>`).join("")}</div></div>
-    <div class="rd-path">${nodes.join("")}<i class="rlink ${c.done === c.t ? "d" : ""}"></i>${gift}</div>
+    ${paged ? `<div class="rd-nav"><span>Đang xem chặng <b>${from + 2 > to + 1 ? from + 1 : `${from + 1}–${to + 1}`}</b> / ${ns}</span>${browsing ? `<button class="rd-here" data-rdhere="1">↩ Về chặng ${cs + 1}</button>` : ""}</div>` : ""}
+    <div class="rd-mid"><div class="rd-path">${paged ? `<button class="rd-arr" data-rdnav="-1" aria-label="Xem các chặng trước" title="Các chặng trước"${from <= 0 ? " disabled" : ""}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ""}${nodes.join("")}${atEnd ? `<i class="rlink ${c.done === c.t ? "d" : ""}"></i>${gift}` : `<i class="rlink"></i><span class="rd-more" title="Còn ${ns - 1 - to} chặng nữa">…</span>`}${paged ? `<button class="rd-arr" data-rdnav="1" aria-label="Xem các chặng sau" title="Các chặng sau"${atEnd ? " disabled" : ""}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ""}</div>${stagePanel}</div>
     <div class="rd-foot"><div class="rd-bar" aria-hidden="true">${R.per.map(x => `<i style="flex:${x.t}"><b style="width:${(x.done / x.t * 100).toFixed(1)}%"></b></i>`).join("")}</div>
       <div class="rd-legend">${R.per.map(x => `<span>${lvName(x.lv)} <b>${Math.floor(x.done / x.t * 100)}%</b></span>`).join("")}</div>
-      <p>${allDone ? `Đã học ${R.total.toLocaleString("vi-VN")}/${R.total.toLocaleString("vi-VN")} từ.` : `Còn <b>${R.remPct}%</b> · ${R.left.toLocaleString("vi-VN")} từ phải học để hoàn thành lộ trình${days ? `, khoảng ${days.toLocaleString("vi-VN")} ngày với ${npd} từ mới/ngày` : ""}.`}</p></div>
+      ${allDone ? `<p>Đã học ${R.total.toLocaleString("vi-VN")}/${R.total.toLocaleString("vi-VN")} từ.</p>` : `<div class="rd-stats"><div><b>${R.remPct}%</b><span>còn lại</span></div><div title="${R.left.toLocaleString("vi-VN")}"><b>${fmtS(R.left)}</b><span>từ phải học</span></div><div><b>${days ? "~" + fmtS(days) : "–"}</b><span>${days ? `ngày · ${npd} từ/ngày` : "ngày"}</span></div></div>`}</div>
   </section>`;
 }
 const ICO_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
@@ -3847,6 +3892,10 @@ document.addEventListener("click", e => {
   if (d.dmode) { if (DICT.mode !== d.dmode) { DICT.mode = d.dmode; DICT.page = 0; renderDict(); } return; }
   if (d.il) { DICT.il = d.il; DICT.iopen = null; DICT.page = 0; document.querySelectorAll(".levels [data-il]").forEach(b => b.setAttribute("aria-pressed", b.dataset.il === d.il)); renderIdiomList(); return; }
   if (d.iopen) { DICT.iopen = DICT.iopen === d.iopen ? null : d.iopen; renderIdiomList(); return; }
+  if (d.rdnav || d.rdhere) { const R0 = roadInfo(), c0 = R0.cur, ns0 = Math.ceil(c0.t / ROAD_STAGE), W0 = roadWin(), mf = Math.max(0, ns0 - W0);
+    if (d.rdhere) ROADV.from = null; else { const cur = ROADV.from == null ? NaN : ROADV.from; let cs0 = 0; while (cs0 < ns0 - 1 && c0.ws.slice(cs0 * ROAD_STAGE, (cs0 + 1) * ROAD_STAGE).every(w => S.cards[w.id])) cs0++;
+      const base = isNaN(cur) ? Math.max(0, Math.min(cs0 - (W0 >> 1), mf)) : cur; ROADV.from = Math.max(0, Math.min(mf, base + 3 * Number(d.rdnav))); }
+    if (VIEW === "home") renderHome(); return; }
   if (d.goal) { S.settings.goalLv = Number(d.goal); S.settingsUpd = Date.now(); markDirty("meta"); save(); if (VIEW === "home") renderHome(); return; }
   if (d.qidiom) { if (SES) return; DICT.mode = "i"; DICT.q = ""; DICT.il = "all"; DICT.page = 0; DICT.iopen = null; setView("dict"); return; }
   if (d.idm) { if (SES) return; DICT.mode = "i"; DICT.q = d.idm; DICT.il = "all"; DICT.page = 0; DICT.iopen = d.idm; setView("dict"); return; }
