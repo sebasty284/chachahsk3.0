@@ -950,6 +950,48 @@ body[data-view="home"] .more{margin-top:30px}
 
 .need .ni{grid-column:1;grid-row:1/3}.need .nl{grid-column:2;grid-row:1}.need .nv{grid-column:3;grid-row:1}.need .nb{grid-column:2/4;grid-row:2}
 .petwrap.dirty::after{inset:38% 24% 6%;background:radial-gradient(circle at 22% 55%,rgba(110,76,42,.75) 0 7%,transparent 8%),radial-gradient(circle at 74% 38%,rgba(110,76,42,.7) 0 6%,transparent 7%),radial-gradient(circle at 56% 80%,rgba(110,76,42,.7) 0 8%,transparent 9%),radial-gradient(circle at 38% 28%,rgba(110,76,42,.6) 0 5%,transparent 6%),radial-gradient(circle at 82% 70%,rgba(110,76,42,.6) 0 5%,transparent 6%)}
+
+/* Tuần này gọn lại + Sắp ôn */
+.wcard{justify-content:space-between;gap:14px}
+.wcard .wdays{flex:none;height:92px;min-height:0;margin:2px 0 0}
+.wcard .wgoals{margin-bottom:0}
+.wcard .wstats{margin-top:0}
+.fc-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.fc-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.fc{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fc b{width:100%;height:30px;border-radius:9px;display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--ink);background:color-mix(in srgb,var(--jade) calc(var(--a) * 38%),var(--heat0));font-variant-numeric:tabular-nums}
+.fc.hi b{box-shadow:inset 0 0 0 1.5px var(--jade)}
+.fc span{font-size:11px;font-weight:700;color:var(--muted)}
+
+/* Sắp ôn: que-chấm */
+.fcast{background:var(--surface2);border-radius:16px;padding:12px 12px 10px}
+.fc-h{margin-bottom:4px}
+.fc-sum{font-size:12.5px;color:var(--muted)}.fc-sum b{font-family:var(--display);font-size:15px;color:var(--ink)}
+.fc-row{gap:2px;align-items:end}
+.fc{gap:3px}
+.fc em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--ink);height:15px;line-height:15px;font-variant-numeric:tabular-nums}
+.fc .fs{height:34px;width:100%;display:flex;justify-content:center;align-items:flex-end;position:relative}
+.fc .fs::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:1px;background:var(--line)}
+.fc .fs i{position:relative;width:3px;border-radius:2px;background:linear-gradient(to top,transparent,var(--ring2));min-height:0}
+.fc .fs i::before{content:"";position:absolute;left:50%;top:-5px;width:11px;height:11px;border-radius:50%;transform:translateX(-50%);background:var(--cta);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring2) 22%,transparent)}
+.fc.z .fs i::before{width:6px;height:6px;top:-4px;background:var(--line);box-shadow:none}
+.fc.hi .fs i::before{width:14px;height:14px;top:-7px}
+.fc.hi em{color:var(--jade)}
+.fc span{font-size:11px;font-weight:700;color:var(--muted);margin-top:3px}
+.fc.z span{opacity:.75}
+
+.wd .wb{padding-top:17px}
+.wd .wb i{position:relative}
+.wd .wb i em{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:3px;font-style:normal;font-size:11px;font-weight:700;color:var(--muted);line-height:1;height:auto}
+.wd.today .wb i em{color:var(--jade)}
+.fc .fs{height:52px;padding-top:24px;box-sizing:border-box}
+.fc .fs i em{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:9px;font-style:normal;font-size:11.5px;font-weight:700;color:var(--ink);line-height:1;height:auto}
+.fc.hi .fs i em{margin-bottom:11px;color:var(--jade)}
+
+.wd .wb i.z,.wg-bar,.need .nb,.xpbar,.rd-bar i{background:color-mix(in srgb,var(--ink) 9%,transparent)}
+
+.wd .wb i em,.fc .fs i em{white-space:nowrap;letter-spacing:-.02em}
+.wstats b{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -2362,7 +2404,8 @@ function buyItem(id) {
 const MUSIC_MODES = {
   piano:{ name:"Piano mưa", desc:"Piano chậm, tiếng mưa nhẹ" },
   zheng:{ name:"Cổ tranh 21 dây", desc:"Bản cổ phong chậm, tiếng suối chảy" },
-  ambient:{ name:"Ambient tĩnh", desc:"Hợp âm trôi chậm, chuông gió xa" }
+  ambient:{ name:"Ambient tĩnh", desc:"Hợp âm trôi chậm, chuông gió xa" },
+  lofi:{ name:"Lofi đêm", desc:"Nhịp lofi chậm, Rhodes ấm, đĩa than lách tách" }
 };
 const MZ = { ctx:null, master:null, dry:null, wet:null, timer:null, nodes:[], next:0, step:0, mode:null, kscache:{} };
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -2381,7 +2424,19 @@ function mzInit() {
 function mzOut(node, wet = .5) { node.connect(MZ.dry); const g = MZ.ctx.createGain(); g.gain.value = wet; node.connect(g); g.connect(MZ.wet); }
 function mzNoise(seconds = 2) { const ctx = MZ.ctx, b = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate), d = b.getChannelData(0); let last = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; d[i] = w * .5 + last * 3; } const src = ctx.createBufferSource(); src.buffer = b; src.loop = true; return src; }
 /* Lớp nền: mưa (piano) hoặc suối (đàn tranh) */
+function mzVinyl() {
+  const ctx = MZ.ctx, sr = ctx.sampleRate, len = sr * 4, b = ctx.createBuffer(1, len, sr), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * .018;
+  for (let k = 0; k < 70; k++) { const at = Math.floor(Math.random() * (len - 200)), amp = .25 + Math.random() * .6, w = 8 + Math.floor(Math.random() * 40);
+    for (let j = 0; j < w; j++) d[at + j] += (Math.random() * 2 - 1) * amp * Math.exp(-j / (w / 4)); }
+  const src = ctx.createBufferSource(); src.buffer = b; src.loop = true;
+  const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6500;
+  const g = ctx.createGain(); g.gain.value = .08;
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(MZ.master); src.start(); MZ.nodes.push(src);
+}
 function mzBed(kind) {
+  if (kind === "vinyl") return mzVinyl();
   const ctx = MZ.ctx, src = mzNoise(3), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), g = ctx.createGain();
   if (kind === "rain") { f1.type = "highpass"; f1.frequency.value = 900; f2.type = "lowpass"; f2.frequency.value = 7000; g.gain.value = .05; }
   else { f1.type = "bandpass"; f1.frequency.value = 700; f1.Q.value = .7; f2.type = "lowpass"; f2.frequency.value = 2600; g.gain.value = .045;
@@ -2479,6 +2534,67 @@ function mzPad(t, notes, dur = 11) {
 }
 function mzChime(t, m) { const ctx = MZ.ctx, o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = mtof(m); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06, t + .01); g.gain.exponentialRampToValueAtTime(.0004, t + 5); o.connect(g); mzOut(g, .8); o.start(t); o.stop(t + 5.2); }
 const pick2 = a => a[Math.floor(Math.random() * a.length)];
+/* ---------- Lofi đêm ---------- */
+function lofiBus() {
+  if (MZ.lofi && MZ.lofi.ctx === MZ.ctx) return MZ.lofi;
+  const ctx = MZ.ctx, lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; lp.Q.value = .4;
+  const g = ctx.createGain(); g.gain.value = .55; lp.connect(g); mzOut(g, .22);
+  const wob = ctx.createOscillator(), wg = ctx.createGain(); wob.frequency.value = .35; wg.gain.value = 6; wob.connect(wg); wob.start(); MZ.nodes.push(wob);
+  return MZ.lofi = { ctx, inp:lp, wob:wg };
+}
+function mzRhodes(t, m, v = .08, dur = 2.6) {
+  const ctx = MZ.ctx, B = lofiBus(), f = mtof(m), g = ctx.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .012); g.gain.exponentialRampToValueAtTime(v * .45, t + .5); g.gain.exponentialRampToValueAtTime(.0004, t + dur);
+  const trem = ctx.createGain(), tl = ctx.createOscillator(), tg = ctx.createGain(); tl.frequency.value = 4.2; tg.gain.value = .12; trem.gain.value = .9; tl.connect(tg); tg.connect(trem.gain);
+  const car = ctx.createOscillator(); car.type = "sine"; car.frequency.value = f; B.wob.connect(car.detune);
+  const mod = ctx.createOscillator(), mg = ctx.createGain(); mod.frequency.value = f * 2; mg.gain.setValueAtTime(f * 1.4, t); mg.gain.exponentialRampToValueAtTime(f * .08, t + .35); mod.connect(mg); mg.connect(car.frequency);
+  const body = ctx.createOscillator(), bg = ctx.createGain(); body.type = "triangle"; body.frequency.value = f; body.detune.value = 4; bg.gain.value = .35; body.connect(bg); bg.connect(g);
+  car.connect(g); g.connect(trem); trem.connect(B.inp);
+  [car, mod, body, tl].forEach(o => { o.start(t); o.stop(t + dur + .1); });
+}
+function mzLofiBass(t, m, v = .2, dur = 1.4) {
+  const ctx = MZ.ctx, o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+  o.type = "sine"; o.frequency.value = mtof(m); o2.type = "triangle"; o2.frequency.value = mtof(m); lp.type = "lowpass"; lp.frequency.value = 320;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .02); g.gain.exponentialRampToValueAtTime(v * .5, t + .3); g.gain.exponentialRampToValueAtTime(.0004, t + dur);
+  o.connect(g); o2.connect(lp); lp.connect(g); const bv = ctx.createGain(); bv.gain.value = .65; g.connect(bv); bv.connect(MZ.dry); o.start(t); o2.start(t); o.stop(t + dur + .05); o2.stop(t + dur + .05);
+}
+function lofiNoiseBuf() { if (!MZ.kscache.lnoise) { const ctx = MZ.ctx, b = ctx.createBuffer(1, ctx.sampleRate * .4, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; MZ.kscache.lnoise = b; } return MZ.kscache.lnoise; }
+function mzKick(t, v = .42) {
+  const ctx = MZ.ctx, o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine";
+  o.frequency.setValueAtTime(115, t); o.frequency.exponentialRampToValueAtTime(42, t + .14);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0005, t + .42); o.connect(g); g.connect(lofiBus().inp); o.start(t); o.stop(t + .45);
+}
+function mzSnare(t, v = .16) {
+  const ctx = MZ.ctx, n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain(); n.buffer = lofiNoiseBuf();
+  bp.type = "bandpass"; bp.frequency.value = 1700; bp.Q.value = .8;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0005, t + .22); n.connect(bp); bp.connect(g); g.connect(lofiBus().inp); n.start(t); n.stop(t + .25);
+  const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(140, t + .1);
+  og.gain.setValueAtTime(v * .7, t); og.gain.exponentialRampToValueAtTime(.0005, t + .12); o.connect(og); og.connect(lofiBus().inp); o.start(t); o.stop(t + .14);
+}
+function mzHat(t, v = .05, open) {
+  const ctx = MZ.ctx, n = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), g = ctx.createGain(); n.buffer = lofiNoiseBuf();
+  hp.type = "highpass"; hp.frequency.value = 6500; const d = open ? .18 : .045;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0004, t + d); n.connect(hp); hp.connect(g); g.connect(lofiBus().inp); n.start(t); n.stop(t + d + .02);
+}
+/* Vòng hợp âm ii–V–I–vi (Dm9 · G13 · Cmaj9 · Am9), mỗi hợp âm 1 ô nhịp */
+const LOFI_CH = [[38, [53, 57, 60, 64]], [43, [53, 59, 64, 69]], [36, [52, 55, 59, 62]], [45, [55, 59, 60, 64]]];
+const LOFI_MEL = [72, 74, 76, 79, 81, 84];
+function lofiStep(t, k) {
+  const st = k % 16, bar = Math.floor(k / 16), [bass, ch] = LOFI_CH[bar % 4], sw = st % 2 ? .045 : 0, tt = t + sw;
+  const brk = bar % 16 >= 14, intro = bar < 1;
+  if (st === 0) ch.forEach((m, i) => mzRhodes(t + i * .018 + Math.random() * .01, m, .07 + Math.random() * .015, 3.2));
+  if (st === 10 && Math.random() < .55) ch.slice(1).forEach((m, i) => mzRhodes(tt + i * .015, m, .045, 1.4));
+  if (st === 0) mzLofiBass(t, bass, .22, 1.5);
+  if (st === 8) mzLofiBass(t, bass + (Math.random() < .5 ? 7 : 0), .17, 1.1);
+  if (st === 14 && Math.random() < .4) mzLofiBass(tt, bass + 12, .1, .35);
+  if (!brk && !intro) {
+    if (st === 0 || (st === 7 && Math.random() < .7) || (st === 10 && Math.random() < .35)) mzKick(tt, st === 0 ? .42 : .3);
+    if (st === 4 || st === 12) mzSnare(tt + .012, .15 + Math.random() * .03);
+    if (st % 2 === 0) mzHat(tt, .035 + Math.random() * .025, st === 14 && Math.random() < .3);
+    else if (Math.random() < .25) mzHat(tt, .02);
+  }
+  if (bar % 2 === 1 && (st === 2 || st === 6 || st === 11) && Math.random() < .3) mzPiano(tt, pick2(LOFI_MEL), .05 + Math.random() * .03, 2.4);
+}
 /* Lịch phát: mỗi 150 ms xếp sẵn nốt cho 1 giây tới */
 function mzSchedule() {
   const ctx = MZ.ctx, ahead = ctx.currentTime + 1.2;
@@ -2497,6 +2613,9 @@ function mzSchedule() {
       e.f(Math.max(MZ.gzT0 + e.b * G.beat + (Math.random() - .5) * .02, ctx.currentTime + .01));
       if (MZ.gzi >= G.ev.length) { MZ.gzT0 += G.beats * G.beat + 1.5; MZ.gz = gzBuildLoop(++MZ.gzLoop); MZ.gzi = 0; }
       MZ.next = MZ.gzT0 + MZ.gz.ev[MZ.gzi].b * MZ.gz.beat;
+    } else if (MZ.mode === "lofi") {
+      lofiStep(t, k);
+      MZ.next += 60 / 74 / 4;
     } else {
       const chords = [[50, 57, 64, 66], [47, 54, 62, 69], [43, 50, 59, 66], [45, 52, 61, 64]];
       if (k % 3 === 0) mzPad(t, chords[Math.floor(k / 3) % 4]);
@@ -2510,13 +2629,13 @@ function musicStart(mode = S.settings.musicMode) {
   const ctx = MZ.ctx; if (ctx.state === "suspended") ctx.resume();
   musicStopNodes();
   MZ.mode = MUSIC_MODES[mode] ? mode : "piano"; MZ.step = 0; MZ.next = ctx.currentTime + .15; MZ.zi = 3; MZ.gz = null; MZ.gzLast = {};
-  if (MZ.mode === "piano") mzBed("rain"); else if (MZ.mode === "zheng") mzBed("stream");
+  if (MZ.mode === "piano") mzBed("rain"); else if (MZ.mode === "zheng") mzBed("stream"); else if (MZ.mode === "lofi") mzBed("vinyl");
   const v = Math.max(0, Math.min(1, Number(S.settings.musicVol) || .5));
   MZ.master.gain.cancelScheduledValues(ctx.currentTime); MZ.master.gain.setValueAtTime(MZ.master.gain.value, ctx.currentTime); MZ.master.gain.linearRampToValueAtTime(v * .9, ctx.currentTime + 1.5);
   clearInterval(MZ.timer); MZ.timer = setInterval(mzSchedule, 150); mzSchedule();
   MZ.playing = true; renderMusicFab();
 }
-function musicStopNodes() { MZ.nodes.forEach(n => { try { n.stop(); } catch (e) {} }); MZ.nodes = []; }
+function musicStopNodes() { MZ.nodes.forEach(n => { try { n.stop(); } catch (e) {} }); MZ.nodes = []; MZ.lofi = null; }
 function musicStop() {
   if (!MZ.ctx) return; const ctx = MZ.ctx; clearInterval(MZ.timer); MZ.playing = false;
   MZ.master.gain.cancelScheduledValues(ctx.currentTime); MZ.master.gain.setValueAtTime(MZ.master.gain.value, ctx.currentTime); MZ.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
@@ -2907,11 +3026,30 @@ function weekCard(learned, today, remaining = 0) {
   for (let i = 6; i >= 0; i--) { const t = Date.now() - i * DAY, l = S.log[dayKey(t)] || {}; days.push({ n:l.n || 0, d:new Date(t) }); }
   const mx = Math.max(20, ...days.map(x => x.n)), on = days.filter(x => x.n).length;
   return `<section class="wcard"><div class="wc-h"><h3>Tuần này</h3><span class="muted small">${on}/7 ngày có học</span></div>
-    <div class="wdays">${days.map((x, i) => `<div class="wd ${i === 6 ? "today" : ""}" title="${x.d.toLocaleDateString("vi-VN")}: ${x.n} câu"><em>${x.n || ""}</em><div class="wb"><i style="height:${x.n ? Math.max(8, Math.round(x.n / mx * 100)) : 4}%" class="${x.n ? "" : "z"}"></i></div><span>${DN[x.d.getDay()]}</span></div>`).join("")}</div>
-    ${(() => { const done = today.n || 0, plan = done + remaining, nw = today.nw || 0, goal = Math.max(1, Number(S.settings.newPerDay) || 0), bar = (lab, a, b) => `<div class="wgoal"><div class="wg-l"><span>${lab}</span><b>${a.toLocaleString("vi-VN")}<small>/${b.toLocaleString("vi-VN")}</small></b></div><div class="wg-bar"><i style="width:${b ? Math.min(100, Math.round(a / b * 100)) : 0}%"></i></div></div>`;
+    <div class="wdays">${days.map((x, i) => `<div class="wd ${i === 6 ? "today" : ""}" title="${x.d.toLocaleDateString("vi-VN")}: ${x.n.toLocaleString("vi-VN")} câu"><div class="wb"><i style="height:${x.n ? Math.max(8, Math.round(x.n / mx * 100)) : 4}%" class="${x.n ? "" : "z"}">${x.n ? `<em>${fmtK(x.n)}</em>` : ""}</i></div><span>${DN[x.d.getDay()]}</span></div>`).join("")}</div>
+    ${(() => { const done = today.n || 0, plan = done + remaining, nw = today.nw || 0, goal = Math.max(1, Number(S.settings.newPerDay) || 0), bar = (lab, a, b) => `<div class="wgoal"><div class="wg-l"><span>${lab}</span><b title="${a.toLocaleString("vi-VN")}/${b.toLocaleString("vi-VN")}">${fmtS(a)}<small>/${fmtS(b)}</small></b></div><div class="wg-bar"><i style="width:${b ? Math.min(100, Math.round(a / b * 100)) : 0}%"></i></div></div>`;
       return `<div class="wgoals"><div class="eyebrow" style="font-size:11px">Hôm nay</div>${bar("Câu đã làm", done, plan || done)}${Number(S.settings.newPerDay) ? bar("Từ mới", Math.min(nw, goal), goal) : ""}</div>`; })()}
-    <div class="wstats"><div><b>${streak()}</b><span>ngày liên tục</span></div><div><b>${learned.toLocaleString("vi-VN")}</b><span>từ đã học</span></div>
-      <div><b>${WORDS.filter(w => known(w.id)).length.toLocaleString("vi-VN")}</b><span>từ đã thuộc</span></div><div><b>${today.n ? Math.round(today.ok / today.n * 100) + "%" : "–"}</b><span>đúng hôm nay</span></div></div></section>`;
+    ${forecastHtml()}
+    <div class="wstats"><div><b>${streak()}</b><span>ngày liên tục</span></div><div title="${learned.toLocaleString("vi-VN")}"><b>${fmtS(learned)}</b><span>từ đã học</span></div>
+      <div><b>${fmtS(WORDS.filter(w => known(w.id)).length)}</b><span>từ đã thuộc</span></div><div><b>${today.n ? Math.round(today.ok / today.n * 100) + "%" : "–"}</b><span>đúng hôm nay</span></div></div></section>`;
+}
+/* Số gọn cho ô hẹp: 999 · 1,2k · 12k · 1,2tr */
+function fmtK(n) {
+  n = Math.round(Number(n) || 0);
+  if (n < 1000) return String(n);
+  if (n < 10000) return (n / 1000).toFixed(1).replace(".", ",").replace(",0", "") + "k";
+  if (n < 1e6) return Math.round(n / 1000) + "k";
+  return (n / 1e6).toFixed(1).replace(".", ",").replace(",0", "") + "tr";
+}
+const fmtS = n => n >= 10000 ? fmtK(n) : Number(n).toLocaleString("vi-VN");
+/* Sắp ôn 7 ngày tới (lịch hằng ngày, chưa tính chủ đề) */
+function forecastHtml() {
+  const DN = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"], d0 = dayStart(), cnt = [0, 0, 0, 0, 0, 0, 0];
+  for (const id in S.cards) { if (!ITEM[id]) continue; const k = Math.floor((S.cards[id].due - d0) / DAY) - 1; if (k >= 0 && k < 7) cnt[k]++; }
+  const mx = Math.max(1, ...cnt), tot = cnt.reduce((a, b) => a + b, 0), top = cnt.indexOf(Math.max(...cnt));
+  const lab = i => i === 0 ? "Mai" : DN[new Date(d0 + (i + 1) * DAY + 6 * 3600e3).getDay()];
+  return `<div class="fcast"><div class="fc-h"><span class="eyebrow" style="font-size:11px">Sắp ôn</span><span class="fc-sum">${tot ? `<b>${tot.toLocaleString("vi-VN")}</b> mục · 7 ngày tới` : "7 ngày tới chưa có lịch"}</span></div>
+    <div class="fc-row">${cnt.map((n, i) => `<div class="fc ${n ? "" : "z"} ${n && n === mx ? "hi" : ""}" title="${lab(i)}: ${n.toLocaleString("vi-VN")} mục đến hạn"><div class="fs"><i style="height:${n ? Math.max(12, Math.round(n / mx * 100)) : 0}%">${n ? `<em>${fmtK(n)}</em>` : ""}</i></div><span>${lab(i)}</span></div>`).join("")}</div></div>`;
 }
 /* Một dòng trong khối "Việc khác" */
 function moreRow(glyph, title, desc, attr, action, warn) {
