@@ -992,6 +992,31 @@ body[data-view="home"] .more{margin-top:30px}
 
 .wd .wb i em,.fc .fs i em{white-space:nowrap;letter-spacing:-.02em}
 .wstats b{white-space:nowrap}
+
+/* Khối thú cưng gọn */
+.hfoot .petcard.pc2{padding:14px 18px;gap:9px;justify-content:center}
+.pc-top{display:flex;align-items:center;gap:8px;min-width:0}
+.pc-top .pname{font-size:17px}
+.pc-top .pstage{margin-left:0}
+.pc-room{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font:inherit;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.pc-room:hover{border-color:var(--jade)}
+.pc-room .coin{width:16px;height:16px}
+.pc-room span{color:var(--muted)}
+.pc-xp{display:flex;align-items:center;gap:10px}
+.pc-xp .xpbar{flex:1;height:6px}
+.pc-xp span{font-size:12px;color:var(--muted);white-space:nowrap}
+.pc2 .needs{gap:6px 14px;margin:0}
+.pc2 .need{font-size:12px}
+.pc2 .need .ni,.pc2 .need .ni svg{width:17px;height:17px}
+.pc2 .need .nb{height:5px;margin-top:2px}
+.hfoot .petacts-wrap{padding:12px 14px}
+.hfoot .petacts{gap:6px}
+.hfoot .pact{padding:7px 2px 6px;gap:3px;border-radius:14px;font-size:11.5px}
+.hfoot .pact .pi{width:30px;height:30px;border-radius:10px}
+.hfoot .pact .pi svg{width:19px;height:19px}
+.hfoot .pact em{top:3px;right:4px;font-size:10px}
+.hfoot .actnote{margin-top:7px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){.hfoot .petcard.pc2{padding:14px 16px}.hfoot .actnote{white-space:normal}}
 </style>
 </head>
 <body>
@@ -2250,11 +2275,12 @@ function petCard(remaining, todayN) {
   const xp = petXP(), st = petStage(xp), next = PET_STAGES[st + 1], cur = PET_STAGES[st][0];
   const pctv = next ? Math.round((xp - cur) / (next[0] - cur) * 100) : 100;
   const planned = todayN + remaining, fill = !remaining && todayN ? 5 : planned ? Math.min(4, Math.floor(todayN / planned * 5)) : 0;
-  return `<div class="petcard"><div><span class="pname">${esc(petName())}</span><span class="pstage">${PET_STAGES[st][1]}</span></div>
-    <div class="xpbar" role="progressbar" aria-valuenow="${pctv}" aria-valuemin="0" aria-valuemax="100" title="${xp} điểm"><i style="width:${pctv}%"></i></div>
-    <div class="muted small">${next ? `${xp.toLocaleString("vi-VN")} điểm · còn ${(next[0] - xp).toLocaleString("vi-VN")} điểm để lên “${next[1]}”` : `${xp.toLocaleString("vi-VN")} điểm · đã lớn hết cỡ`}. Mỗi câu đúng +1, mỗi ngày học +10, mỗi việc chăm sóc +3.</div>
-    ${careMeters()}
-    <button class="roomlink" data-nav="room">${coinIcon()}<span><b>${coinBalance().toLocaleString("vi-VN")}</b> ${coinName()} · Vào nhà của ${esc(petName())}</span><span aria-hidden="true">›</span></button></div>`;
+  const tip = `Mỗi câu đúng +1, mỗi ngày học +10, mỗi việc chăm sóc +3 điểm lớn.`;
+  return `<div class="petcard pc2"><div class="pc-top"><span class="pname">${esc(petName())}</span><span class="pstage">${PET_STAGES[st][1]}</span>
+      <button class="pc-room" data-nav="room" title="Vào nhà của ${esc(petName())}">${coinIcon()}<b>${fmtS(coinBalance())}</b><span aria-hidden="true">›</span></button></div>
+    <div class="pc-xp" title="${tip}"><div class="xpbar" role="progressbar" aria-valuenow="${pctv}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pctv}%"></i></div>
+      <span>${next ? `${fmtS(xp)}/${fmtS(next[0])} · lên “${next[1]}”` : `${fmtS(xp)} điểm · lớn hết cỡ`}</span></div>
+    ${careMeters()}</div>`;
 }
 const petBadge = mood => `<span class="petbadge">${petSVG(mood)}</span>`;
 /* =====================================================================
@@ -2784,7 +2810,7 @@ function petActs() {
       const wake = a === "sleep" && CN.sleeping, sub = a === "feed" ? (fd >= FEED_MAX ? "đủ" : `−${FEED_COST}`) : (key[a] && !l[key[a]] && !wake ? "+1" : "");
       return `<button class="pact${CN.sleeping && a !== "sleep" ? " dim" : ""}" data-pact="${wake ? "wake" : a}" style="--pc:${col}"><span class="pi">${ACT_ICO[wake ? "wake" : a]}</span><span class="pl">${wake ? "Đánh thức" : label}</span>${sub ? `<em>${sub}</em>` : ""}</button>`;
     }).join("")}</div>
-    <div class="actnote muted small">Hôm nay đã chăm bé ${done}/8 việc · cho ăn ${fd}/${FEED_MAX} lần. Mỗi việc +3 điểm lớn, lần đầu trong ngày +1 ${coinName()}.</div>`;
+    <div class="actnote muted small" title="Mỗi việc chăm sóc +3 điểm lớn, lần đầu trong ngày +1 ${coinName()}">Đã chăm ${done}/8 việc · cho ăn ${fd}/${FEED_MAX} · mỗi việc +3 điểm</div>`;
 }
 function refreshCare() { const n = document.querySelector(".needs"); if (n) n.outerHTML = careMeters(); const w = document.querySelector(".hhero .petwrap"); if (w) { w.classList.toggle("dirty", careNow().clean < 35); } }
 function careFx(cls, n, glyphs) {
