@@ -1119,6 +1119,9 @@ body[data-view="home"] .more{margin-top:30px}
 [data-skin="pixel"] .pact .pi{display:none}
 [data-skin="pixel"] .pact .pg{display:block;font-family:var(--glyph);font-size:26px;line-height:1.05;color:var(--pc)}
 [data-skin="pixel"] .hring circle{stroke-linecap:butt}
+[data-skin="pixel"] .hring text{font-size:8.5px!important;font-weight:400!important}
+[data-skin="pixel"] .hring text:nth-of-type(2){font-size:19px!important}
+[data-skin="pixel"] .hring text:only-of-type{font-size:16px!important}
 [data-skin="pixel"] .brand .cup svg{filter:url(#pxf3)}
 [data-skin="pixel"] .fx i{width:6px!important;height:6px!important}
 /* trang Hôm nay */
@@ -1518,9 +1521,29 @@ let ZH_VOICES = [];
 function loadVoices() {
   if (!("speechSynthesis" in window)) return;
   const all = speechSynthesis.getVoices();
-  ZH_VOICES = all.filter(v => /^(zh|cmn)/i.test(v.lang) && !/HK|yue/i.test(v.lang + v.name))
-    .sort((a, b) => (/CN/i.test(b.lang) ? 1 : 0) - (/CN/i.test(a.lang) ? 1 : 0));
+  ZH_VOICES = all.filter(v => voiceInfo(v).ok).sort((a, b) => voiceInfo(b).score - voiceInfo(a).score);
 }
+/* Chỉ giữ giọng phổ thông Trung Quốc đại lục (loại Đài Loan, Hồng Kông, giọng địa phương); chấm điểm để giọng tự nhiên, kiểu người dẫn chương trình, lên đầu */
+const VOICE_KNOWN = [
+  [/yunyang/i, 100, "Nam", "giọng MC thời sự"], [/xiaoxiao/i, 98, "Nữ", "giọng dẫn chương trình"], [/yunxi\b|yunxi /i, 95, "Nam", "trẻ, rõ"],
+  [/xiaoyi/i, 92, "Nữ", "tươi sáng"], [/yunjian/i, 90, "Nam", "trầm, mạnh"], [/yunxia/i, 80, "Nam", "trẻ"], [/xiaochen|xiaohan|xiaomeng|xiaomo|xiaoqiu|xiaorui|xiaoshuang|xiaoxuan|xiaoyan|xiaoyou|xiaozhen/i, 78, "Nữ", "tự nhiên"],
+  [/lili/i, 75, "Nữ", "Apple"], [/ting-?ting/i, 70, "Nữ", "Apple"], [/yu-?shu/i, 68, "Nữ", "Apple"], [/li-?mu/i, 66, "Nam", "Apple"],
+  [/huihui/i, 40, "Nữ", "Windows cũ"], [/yaoyao/i, 38, "Nữ", "Windows cũ"], [/kangkang/i, 38, "Nam", "Windows cũ"]
+];
+function voiceInfo(v) {
+  const id = v.lang + " " + v.name;
+  if (!/^(zh|cmn)/i.test(v.lang) && !/chinese|普通话|中文|mandarin/i.test(v.name)) return { ok:false, score:0 };
+  if (/HK|TW|yue|cantonese|粤|廣|臺|台湾|taiwan|hong ?kong|hanhan|yating|zhiwei|hsiao|yunjhe|hiu|wanlung|sin-?ji|mei-?jia|liaoning|shaanxi|xiaobei|xiaoni|henan|shandong|sichuan|wuu|nan\b/i.test(id)) return { ok:false, score:0 };
+  let score = /CN|cmn-Hans|zh-Hans|大陆|mainland/i.test(id) ? 20 : 8, gender = "", note = "";
+  for (const [re, sc, g, n] of VOICE_KNOWN) if (re.test(v.name)) { score += sc; gender = g; note = n; break; }
+  if (/natural|online/i.test(v.name)) { score += 55; note = note || "tự nhiên"; }
+  else if (/google|普通话/i.test(v.name)) { score += 45; note = note || "Google"; }
+  else if (/premium|enhanced|nâng cao|增强/i.test(v.name)) score += 40;
+  if (v.localService === false) score += 6;
+  return { ok:true, score, gender, note, neural:/natural|online/i.test(v.name) };
+}
+const voiceLabel = (v, i) => { const f = voiceInfo(v), nm = v.name.replace(/^Microsoft\s+/i, "").replace(/\s*Online\s*\(Natural\)\s*-?\s*/i, " ").replace(/Chinese \(Mainland\)|Chinese \(Simplified, PRC\)/i, "").replace(/[\s-]+$/, "").trim();
+  return `${i < 4 ? "★ " : ""}${nm}${f.gender || f.note ? ` · ${[f.gender, f.note].filter(Boolean).join(", ")}` : ""}`; };
 const ttsOK = () => ZH_VOICES.length > 0;
 function speak(text) {
   if (!ttsOK()) return;
@@ -4066,7 +4089,7 @@ function renderSettings() {
       <div class="setting"><div><div>Tên</div><div class="d">Để trống thì dùng tên mặc định (${PETS[petType()].def}).</div></div><input id="petNameIn" class="petname-in" type="text" maxlength="20" value="${esc(S.settings.petName || "")}" placeholder="${esc(PETS[petType()].def)}" aria-label="Tên thú cưng"></div>
     </div></div>
     <div class="section"><h2>Giọng đọc</h2><div class="panel">
-      ${ttsOK() ? `<div class="setting"><div><div>Giọng</div><div class="d">Giọng có sẵn trong máy. Chất lượng khác nhau tùy thiết bị.</div></div><select id="voiceSel">${ZH_VOICES.map(v => `<option value="${esc(v.name)}" ${v.name === st.voice ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></div>
+      ${ttsOK() ? `<div class="setting"><div><div>Giọng</div><div class="d">Chỉ hiện giọng phổ thông Trung Quốc đại lục, xếp giọng tự nhiên (kiểu MC, người dẫn chương trình) lên đầu; ★ là 4 giọng đáng nghe nhất trên máy này.${ZH_VOICES.length && !ZH_VOICES.some(v => voiceInfo(v).neural || /google|premium|enhanced|lili/i.test(v.name)) ? `<br><b>Máy này chưa có giọng tự nhiên.</b> Dùng Microsoft Edge (Windows/Android) để có Yunyang, Xiaoxiao; iPhone: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Trung → Lili/Tingting (nâng cao).` : ""}</div></div><select id="voiceSel">${ZH_VOICES.map(v => `<option value="${esc(v.name)}" ${(st.voice ? v.name === st.voice : v === ZH_VOICES[0]) ? "selected" : ""}>${esc(voiceLabel(v, ZH_VOICES.indexOf(v)))}</option>`).join("")}</select></div>
       <div class="setting"><div><div>Tốc độ đọc</div><div class="d">${st.rate.toFixed(2)}×</div></div><input id="rateSel" type="range" min="0.5" max="1.2" step="0.05" value="${st.rate}"></div>
       <div class="setting"><div><div>Tự đọc từ khi giới thiệu từ mới</div><div class="d">Phát âm từ ngay khi màn giới thiệu từ mới hiện ra, để nhớ cùng lúc cả âm và chữ. Bấm loa để nghe lại.</div></div>${seg("autoPlay", [["on", "Bật"], ["off", "Tắt"]])}</div>
       <div class="setting"><div>Nghe thử</div><button class="btn ghost" data-say="你好，认识你很高兴。">你好，认识你很高兴。</button></div>`
@@ -4074,10 +4097,10 @@ function renderSettings() {
     </div></div>
     <div class="section"><h2>Giao diện</h2><div class="panel"><div class="setting"><div><div>Phong cách</div><div class="d">Pixel: khung vuông, chữ điểm ảnh như game cổ điển. Mềm mại: bo tròn, màu trà chiều.</div></div>${seg("skin", [["pixel", "Pixel"], ["soft", "Mềm mại"]])}</div>
       ${st.skin !== "soft" ? `<div class="setting"><div><div>Chữ tiếng Việt</div><div class="d">Chữ pixel hợp phong cách. Chọn “Dễ đọc” nếu muốn chữ thường, không có răng cưa.</div></div>${seg("pxText", [["pixel", "Pixel"], ["clean", "Dễ đọc"]])}</div>
-      <div class="setting"><div><div>Chữ Hán khi học</div><div class="d">“Rõ nét” hiện đúng từng nét, nên dùng khi học. “Pixel” đẹp mắt nhưng chữ nhiều nét có thể bị gộp nét.</div></div>${seg("zhFont", [["clear", "Rõ nét"], ["pixel", "Pixel"]])}</div>` : ""}
+      <div class="setting"><div><div>Chữ Hán khi học</div><div class="d">“Rõ nét” hiện đúng từng nét, nên dùng khi học. “Pixel” đẹp mắt nhưng chữ nhiều nét có thể bị gộp nét.</div></div>${seg("zhFont", [["pixel", "Pixel"], ["clear", "Rõ nét"]])}</div>` : ""}
       <div class="setting"><div>Chế độ màu</div>${seg("theme", [["auto", "Theo máy"], ["light", "Sáng"], ["dark", "Tối"]])}</div>
-      <div class="setting stack"><div><div>Bảng màu</div><div class="d">${st.skin !== "soft" ? "Chỉ dùng cho phong cách Mềm mại. " : ""}Đổi màu nền, màu nhấn và biểu đồ. Ô xem trước: nửa trái là chế độ sáng, nửa phải là chế độ tối. Cảnh vườn của thú cưng giữ nguyên.</div></div>
-        <div class="palpick">${Object.entries(PALETTES).map(([k, o]) => `<button class="pal" data-set="palette" data-val="${k}" aria-pressed="${(st.palette || "chacha") === k}"><span class="pv" aria-hidden="true">${[0, 4].map(i => `<span class="pm" style="background:${o.sw[i]}"><b style="background:${o.sw[i + 1]}"><span style="background:${o.sw[i + 2]}"></span></b><i><u style="background:${o.sw[i + 2]}"></u><u style="background:${o.sw[i + 3]}"></u><u style="background:${o.sw[i + 1]}"></u></i></span>`).join("")}</span><span class="pn">${o.label}</span></button>`).join("")}</div></div></div></div>
+      ${st.skin === "soft" ? `<div class="setting stack"><div><div>Bảng màu</div><div class="d">${st.skin !== "soft" ? "Chỉ dùng cho phong cách Mềm mại. " : ""}Đổi màu nền, màu nhấn và biểu đồ. Ô xem trước: nửa trái là chế độ sáng, nửa phải là chế độ tối. Cảnh vườn của thú cưng giữ nguyên.</div></div>
+        <div class="palpick">${Object.entries(PALETTES).map(([k, o]) => `<button class="pal" data-set="palette" data-val="${k}" aria-pressed="${(st.palette || "chacha") === k}"><span class="pv" aria-hidden="true">${[0, 4].map(i => `<span class="pm" style="background:${o.sw[i]}"><b style="background:${o.sw[i + 1]}"><span style="background:${o.sw[i + 2]}"></span></b><i><u style="background:${o.sw[i + 2]}"></u><u style="background:${o.sw[i + 3]}"></u><u style="background:${o.sw[i + 1]}"></u></i></span>`).join("")}</span><span class="pn">${o.label}</span></button>`).join("")}</div></div></div></div>` : ""}
     <div class="section" id="scenesec"><h2>Cảnh nền trang Hôm nay</h2><div class="panel">
       <div class="setting stack"><div><div>Mùa</div><div class="d">Mặc định theo tháng hiện tại (xuân 2–4, hè 5–7, thu 8–10, đông 11–1). Chọn một mùa để giữ cố định; áp dụng cả cho phòng và sân của bé. Giờ trong ngày (bình minh, ngày, hoàng hôn, đêm) vẫn theo giờ thật.</div></div>${seg("sceneSeason", [["auto", "Theo thời gian"], ["spring", "Xuân"], ["summer", "Hạ"], ["autumn", "Thu"], ["winter", "Đông"]])}</div>
       <div class="setting stack"><div><div>Phong cảnh</div><div class="d">Danh lam thắng cảnh Việt Nam, vẽ theo phong cách của web. Màu trời, nước và cây đổi theo giờ và mùa.</div></div>
